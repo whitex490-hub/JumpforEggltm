@@ -1,0 +1,361 @@
+-- // Steal a Brainrot: Final Perfect Hub + Secret Black Stroke + Income & Rarity
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+if PlayerGui:FindFirstChild("BrainrotUltimateHub") then 
+    PlayerGui.BrainrotUltimateHub:Destroy() 
+end
+
+--------------------------------------------------------------------------------
+-- 1. BACKGROUND ANTI-DIE / ANTI-FLING
+--------------------------------------------------------------------------------
+local currentCharacter = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local currentHumanoid = currentCharacter:WaitForChild("Humanoid")
+local currentRootPart = currentCharacter:WaitForChild("HumanoidRootPart")
+
+local function setupCharacter(char)
+    currentCharacter = char
+    currentHumanoid = char:WaitForChild("Humanoid")
+    currentRootPart = char:WaitForChild("HumanoidRootPart")
+
+    currentHumanoid.HealthChanged:Connect(function(newHealth)
+        if newHealth <= 0 then
+            currentHumanoid.Health = currentHumanoid.MaxHealth
+        end
+    end)
+end
+
+setupCharacter(currentCharacter)
+LocalPlayer.CharacterAdded:Connect(setupCharacter)
+
+RunService.Heartbeat:Connect(function()
+    if currentRootPart and currentRootPart.Parent then
+        if currentRootPart.AssemblyLinearVelocity.Magnitude > 80 then
+            currentRootPart.AssemblyLinearVelocity = Vector3.new(0, currentRootPart.AssemblyLinearVelocity.Y, 0)
+            currentRootPart.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+        end
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- 2. ISLAND COORDINATES
+--------------------------------------------------------------------------------
+local islands = {
+    {name = "Green Island", pos = Vector3.new(-458.2, 627.7, 91.2)},
+    {name = "Desert Island", pos = Vector3.new(-446.0, 2270.3, 127.8)},
+    {name = "Ice Island", pos = Vector3.new(-466.3, 4080.6, 22.1)},
+    {name = "Cave Island", pos = Vector3.new(-405.5, 6583.8, 119.6)},
+    {name = "Water Island", pos = Vector3.new(-376.3, 10311.6, 70.7)}
+}
+
+local function getNearestIsland(targetPos)
+    local nearestPos = islands[1].pos
+    local shortestDist = math.huge
+    for _, island in ipairs(islands) do
+        local dist = (targetPos - island.pos).Magnitude
+        if dist < shortestDist then
+            shortestDist = dist
+            nearestPos = island.pos
+        end
+    end
+    return nearestPos
+end
+
+--------------------------------------------------------------------------------
+-- 3. KEYWORD-BASED FLEXIBLE EGG DATABASE
+--------------------------------------------------------------------------------
+local eggDatabase = {
+    -- Ert
+    {keyword = "ballerina", rarity = "BRAINROT GOD", income = "$125K/s"},
+    {keyword = "craburger", rarity = "SECRET", income = "$1.3M/s"},
+    {keyword = "rexino", rarity = "SECRET", income = "$2.6M/s"},
+    {keyword = "qamar", rarity = "SECRET", income = "$3.3M/s"},
+    {keyword = "combinasion", rarity = "SECRET", income = "$10M/s"},
+    
+    -- Arctic
+    {keyword = "frio", rarity = "BRAINROT GOD", income = "$265K/s"},
+    {keyword = "skunki", rarity = "SECRET", income = "$1.6M/s"},
+    {keyword = "rockara", rarity = "SECRET", income = "$3M/s"},
+    {keyword = "puppy", rarity = "SECRET", income = "$4M/s"},
+    {keyword = "yetimatic", rarity = "SECRET", income = "$87.5M/s"},
+    
+    -- Cave
+    {keyword = "spyderini", rarity = "SECRET", income = "$330K/s"},
+    {keyword = "pengu", rarity = "SECRET", income = "$2.3M/s"},
+    {keyword = "chicleteira", rarity = "SECRET", income = "$3.5M/s"},
+    {keyword = "mangus", rarity = "SECRET", income = "$7.5M/s"},
+    {keyword = "draculino", rarity = "SECRET", income = "$120M/s"},
+    
+    -- Aquatic
+    {keyword = "fishboard", rarity = "SECRET", income = "$825K/s"},
+    {keyword = "submarino", rarity = "SECRET", income = "$3.6M/s"},
+    {keyword = "arcadopus", rarity = "SECRET", income = "$5M/s"},
+    {keyword = "soda", rarity = "SECRET", income = "$13M/s"},
+    {keyword = "moby", rarity = "SECRET", income = "$160M/s"},
+    
+    -- Lava
+    {keyword = "pepito", rarity = "SECRET", income = "$950K/s"},
+    {keyword = "sahur", rarity = "SECRET", income = "$2.25M/s"},
+    {keyword = "burrito", rarity = "SECRET", income = "$7M/s"},
+    {keyword = "lavamanta", rarity = "SECRET", income = "$28.5M/s"},
+    {keyword = "cerberus", rarity = "SECRET", income = "$175M/s"},
+    
+    -- Heavenly
+    {keyword = "celestino", rarity = "SECRET", income = "$1.7M/s"},
+    {keyword = "cupid", rarity = "SECRET", income = "$3.1M/s"},
+    {keyword = "panda", rarity = "SECRET", income = "$17.5M/s"},
+    {keyword = "lionello", rarity = "SECRET", income = "$58.5M/s"},
+    {keyword = "cannelloni", rarity = "SECRET", income = "$250M/s"}
+}
+
+local function getEggInfo(name)
+    local lowerName = name:lower()
+    for _, data in ipairs(eggDatabase) do
+        if lowerName:find(data.keyword) then
+            local rarity = data.rarity
+            local income = data.income
+            local textColor = Color3.fromRGB(255, 255, 255)
+            
+            if rarity == "BRAINROT GOD" then
+                textColor = Color3.fromRGB(255, 215, 0)
+            elseif rarity == "MYTHIC" then
+                textColor = Color3.fromRGB(255, 50, 50)
+            elseif rarity == "SECRET" then
+                textColor = Color3.fromRGB(255, 255, 255)
+            end
+            
+            return rarity, income, textColor
+        end
+    end
+    return "EGG", "", Color3.fromRGB(200, 200, 200)
+end
+
+--------------------------------------------------------------------------------
+-- 4. MASTER GUI SETUP
+--------------------------------------------------------------------------------
+local MasterGui = Instance.new("ScreenGui")
+MasterGui.Name = "BrainrotUltimateHub"
+MasterGui.Parent = PlayerGui
+MasterGui.ResetOnSpawn = false
+MasterGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 250, 0, 400)
+MainFrame.Position = UDim2.new(0.02, 0, 0.18, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = MasterGui
+
+local MainCorner = Instance.new("UICorner", MainFrame)
+MainCorner.CornerRadius = UDim.new(0, 8)
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 32)
+Title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+Title.Text = "Ultimate Brainrot Hub"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize, Title.Font = 10, Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local TitleCorner = Instance.new("UICorner", Title)
+TitleCorner.CornerRadius = UDim.new(0, 8)
+
+-- Locked Bounce Farm Toggle
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(1, -10, 0, 35)
+ToggleBtn.Position = UDim2.new(0, 5, 0, 38)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+ToggleBtn.Text = "⚡ Locked Bounce Farm: OFF"
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleBtn.TextSize, ToggleBtn.Font = 11, Enum.Font.GothamBold
+ToggleBtn.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner", ToggleBtn)
+BtnCorner.CornerRadius = UDim.new(0, 6)
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, 0, 0, 24)
+SubTitle.Position = UDim2.new(0, 0, 0, 78)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = " -- Egg Teleport & Income List -- "
+SubTitle.TextColor3 = Color3.fromRGB(180, 180, 180)
+SubTitle.TextSize, SubTitle.Font = 10, Enum.Font.GothamBold
+SubTitle.Parent = MainFrame
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -10, 1, -110)
+ScrollingFrame.Position = UDim2.new(0, 5, 0, 102)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+ScrollingFrame.AutomaticCanvasSize = Enum.AutomaticSize.Y
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 6)
+UIListLayout.Parent = ScrollingFrame
+
+--------------------------------------------------------------------------------
+-- 5. LOCKED BOUNCE LOGIC
+--------------------------------------------------------------------------------
+local lockedFarmActive = false
+local lockedPosition = nil
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    lockedFarmActive = not lockedFarmActive
+    if lockedFarmActive then
+        local char = LocalPlayer.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            lockedPosition = char.HumanoidRootPart.Position
+        end
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(40, 160, 80)
+        ToggleBtn.Text = "⚡ Locked Bounce Farm: ON"
+    else
+        lockedFarmActive = false
+        lockedPosition = nil
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+        ToggleBtn.Text = "⚡ Locked Bounce Farm: OFF"
+    end
+end)
+
+RunService.Heartbeat:Connect(function()
+    if lockedFarmActive and lockedPosition then
+        pcall(function()
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") and char:FindFirstChildOfClass("Humanoid") then
+                local hrp = char.HumanoidRootPart
+                local hum = char:FindFirstChildOfClass("Humanoid")
+                
+                local currentPos = hrp.Position
+                local distance = (Vector3.new(currentPos.X, 0, currentPos.Z) - Vector3.new(lockedPosition.X, 0, lockedPosition.Z)).Magnitude
+                
+                if distance > 4 then
+                    hrp.CFrame = CFrame.new(lockedPosition + Vector3.new(0, 2, 0))
+                end
+                
+                if hum:GetState() ~= Enum.HumanoidStateType.Freefall then
+                    hrp.AssemblyLinearVelocity = Vector3.new(0, 55, 0)
+                end
+            end
+        end)
+    end
+end)
+
+--------------------------------------------------------------------------------
+-- 6. RGB ANIMATION & SETUP
+--------------------------------------------------------------------------------
+local rgbButtons = {}
+
+RunService.RenderStepped:Connect(function()
+    local tickTime = tick() * 2
+    local rainbowColor = Color3.fromHSV(tickTime % 1, 1, 1)
+    
+    for _, btnData in pairs(rgbButtons) do
+        if btnData and btnData.Parent then
+            btnData.TextColor3 = rainbowColor
+        end
+    end
+end)
+
+local function instantTpToNearestIsland(eggPos)
+    local char = LocalPlayer.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    local nearestIslandPos = getNearestIsland(eggPos)
+    hrp.CFrame = CFrame.new(nearestIslandPos + Vector3.new(0, 3, 0))
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+end
+
+local function isValidEgg(obj)
+    local nameLower = obj.Name:lower()
+    local fullName = obj:GetFullName():lower()
+    if nameLower:find("template") or nameLower:find("spawn") or nameLower:find("placement") or nameLower:find("folder") or nameLower:find("zone") then return false end
+    if fullName:find("plot") or fullName:find("base") or fullName:find("owner") or fullName:find("housing") then return false end
+    if not nameLower:find("egg") then return false end
+    if obj:IsA("BasePart") or obj:IsA("Model") then return true end
+    return false
+end
+
+local function setupEgg(egg)
+    if not isValidEgg(egg) then return end
+    local primaryPart = egg:IsA("Model") and (egg.PrimaryPart or egg:FindFirstChildWhichIsA("BasePart")) or egg
+    if not primaryPart then return end
+
+    local rarityText, incomeText, textColor = getEggInfo(egg.Name)
+
+    -- 3D Billboard ESP with White Text & Black Outline/Stroke Layer for Secret
+    if not primaryPart:FindFirstChild("EggTag") then
+        local billboard = Instance.new("BillboardGui")
+        billboard.Name = "EggTag"
+        billboard.Size = UDim2.new(0, 160, 0, 65)
+        billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+        billboard.AlwaysOnTop = true
+        billboard.Parent = primaryPart
+
+        local textLabel = Instance.new("TextLabel")
+        textLabel.Size = UDim2.new(1, 0, 1, 0)
+        textLabel.BackgroundTransparency = 1
+        textLabel.Text = egg.Name .. (rarityText ~= "" and "\n★ " .. rarityText .. " ★\n" .. incomeText or "")
+        textLabel.TextColor3 = textColor
+        textLabel.TextSize = 11
+        textLabel.Font = Enum.Font.FredokaOne
+        textLabel.Parent = billboard
+
+        -- Black Layer / Outline Stroke
+        local stroke = Instance.new("UIStroke")
+        stroke.Thickness = (rarityText == "SECRET") and 3.5 or 2.5
+        stroke.Color = Color3.fromRGB(0, 0, 0) -- Solid Black Layer
+        stroke.Parent = textLabel
+    end
+
+    -- GUI List Button
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, -5, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    btn.Text = " 🥚 " .. egg.Name .. (rarityText ~= "" and " [" .. rarityText .. "] " .. incomeText or "")
+    btn.TextColor3 = textColor
+    btn.TextSize, btn.Font = 10, Enum.Font.GothamBold
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Parent = ScrollingFrame
+
+    if rarityText == "BRAINROT GOD" then
+        table.insert(rgbButtons, btn)
+    end
+
+    local btnCorner = Instance.new("UICorner", btn)
+    btnCorner.CornerRadius = UDim.new(0, 5)
+
+    local conn
+    conn = btn.MouseButton1Click:Connect(function()
+        if primaryPart and primaryPart.Parent then
+            instantTpToNearestIsland(primaryPart.Position)
+        end
+    end)
+
+    local descendantConn
+    descendantConn = egg.AncestryChanged:Connect(function()
+        if not egg.Parent then
+            btn:Destroy()
+            if conn then conn:Disconnect() end
+            if descendantConn then descendantConn:Disconnect() end
+        end
+    end)
+end
+
+for _, obj in pairs(Workspace:GetDescendants()) do
+    pcall(function() setupEgg(obj) end)
+end
+
+Workspace.DescendantAdded:Connect(function(obj)
+    task.wait(0.5)
+    pcall(function() setupEgg(obj) end)
+end)
+
+print("Final Perfect Hub Loaded Successfully!")
